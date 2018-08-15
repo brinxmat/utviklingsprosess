@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf8">
+<head>
+  <title>Autoritetsregister for verk</title>
+</head>
+<body>
+<h1 id="autoritetsregister-for-verk">Autoritetsregister for verk</h1>
+<h2 id="sipoc">SIPOC</h2>
+<p>Her bruker jeg ordet &quot;biblioteksystem&quot; ukritisk, det kunne like gjerne bare vært &quot;tredjepartsdatakonsumentapplikasjon&quot;</p>
+<table style="width:68%;">
+<colgroup>
+<col width="15%" />
+<col width="11%" />
+<col width="13%" />
+<col width="12%" />
+<col width="15%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Supplier</th>
+<th align="left">Input</th>
+<th align="left">Process</th>
+<th align="left">Output</th>
+<th align="left">Customer</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Biblioteksystem</td>
+<td align="left">Autoritets-ID, ønsket format</td>
+<td align="left">Finn data i riktig format</td>
+<td align="left">Formatert data</td>
+<td align="left">Bibliotekssystem</td>
+</tr>
+<tr class="even">
+<td align="left">Biblioteksystem</td>
+<td align="left">Streng</td>
+<td align="left">Finn treff i database</td>
+<td align="left">Treffliste</td>
+<td align="left">Biblioteksystem</td>
+</tr>
+<tr class="odd">
+<td align="left">Biblioteksystem</td>
+<td align="left">Autoritetsdata</td>
+<td align="left">Opprette nytt autoritet</td>
+<td align="left">Statuskode, (autoritets-ID)</td>
+<td align="left">Biblioteksystem</td>
+</tr>
+<tr class="even">
+<td align="left">Biblioteksystem</td>
+<td align="left">Autoritetsdata, Etag</td>
+<td align="left">Endre autoritetsdata</td>
+<td align="left">Statuskode</td>
+<td align="left">Biblioteksystem</td>
+</tr>
+</tbody>
+</table>
+<h2 id="utviklingsprosess">Utviklingsprosess</h2>
+<p>Prosessen eies av teamet.</p>
+<p>Teamets behov endrer seg over tid og i forhold til oppgavene de jobber med. Den optimale arbeidsformen er dermed flytende og kan ikke forutsies. Dette gjør at vi må ha korte tilbakemeldingsveier og at vi reaktivt kan endre prosessen. Det anbefales ukentlige prosessmøter for å sanke erfaringer og foreslå forbedringer til prosessen.</p>
+<p>Vi utvikler mikrotjenester i et skymiljø og dette endrer måten vi kan og skal utvikle på. Her har jeg tegnet opp en standardprosess som neppe passer direkte med det vi skal faktisk gjøre hvis vi tolker blant annet bygg, utrulling , enhetstesting og integrasjonstesting på tradisjonell vis. Hvordan jeg mener vi skal begynne med å tenke på disse ting skisserer jeg under, men hold i bakhode at skymiljøet leverer prosesser og metoder for noen av disse oppgavene som gjør at det er mer automatikk her enn en vises på første blikk. Merk også at det er uten hensikt å teste ferdigtestede komponenter fra skymiljø.</p>
+<div class="figure">
+<img src="overordnet_utviklingsprosess_liten.jpg" alt="Utviklingsprosess, overordnet" />
+<p class="caption">Utviklingsprosess, overordnet</p>
+</div>
+<div class="figure">
+<img src="http://www.growing-object-oriented-software.com/figures/tdd-with-acceptance-tests.svg" alt="a" />
+<p class="caption">From Growing OO software</p>
+</div>
+<h2 id="valg-av-verktøy-språk-og-metoder">Valg av verktøy, språk og metoder</h2>
+<p>Teamet beslutter. Det tas beslutninger basert på faktiske forhold, ikke proklamasjoner, men følgende bør tas høyde for:</p>
+<ul>
+<li>Det ikke brukes tid på abstraksjoner der skyplattformen leverer nødvendige integrasjoner og mockingrammeverk eksisterer</li>
+<li>Lettere utvikling i skyplattform bør trumpe eksisterende praksis</li>
+<li>Det er helt i orden å ta i bruk flere språk hvis det er gode grunner til dette (jf. NodeJS tjeneste for serialisering/deserialisering av JSON-LD kontra bruken av Java implementasjonen)</li>
+<li>Arkitekturen utnytter FaaS</li>
+</ul>
+<h2 id="utviklingspipeline">Utviklingspipeline</h2>
+<p>Hensikten med utviklingspipeline er å sikre at bestilt funksjonalitet realiseres i kjørende kode. Forutsetter dette Continuous deployment? Nei. Bør vi ha en forutsetning om continuous deployment? Ja, fordi utviklingsmetodikken skal sikre at bestilt funksjonalitet og kan rulles ut uten sjekk. Hvis dette viser seg å ikke være saken er det problemer andre steder i prosessen.</p>
+<p>Valget av skyplattform tilsier i hvilken grad utviklingspipeline skal lages for hand eller bruke plattformens verktøy. Det er derfor viktig å fastslå om tiden skal brukes på å opprette flyt i uavhengige tilleggstjenester (f.eks., CircleCI, Travis) eller brukes lokale varianter (f.eks., Gitlab, Jenkins) eller brukes plattformløsninger (f.eks., AWS Codestar med Codebuild, Codepipeline, og så videre). Det er teamet som beslutter hva som er raskeste vei til mål, og dette skal dokumenteres.</p>
+<p>Utviklingspipeline er noe som må revideres etter behov og er på ingen måte statisk; i tidlige faser bør det beregegnes at noe tid får på oppsett og finpussing av skissert løsning, i tillegg til at tida kan gå litt for å sanke erfaringer med oppsettet.</p>
+<pre><code>    |-------------\-----------------\-------------\--------------- \------------------------------|
+    | Commit code  &gt; Static analyis  &gt;  Build/Test &gt; Deploy staging &gt; End-to-end testing &gt; Deploy |
+    |-------------/-----------------/-------------/----------------/------------------------------|</code></pre>
+<h2 id="testing">Testing</h2>
+<p>Enhetstester som er logikksjekk bør kunne enkelt skrives, og kode som skrives i Function-as-a-Service arkitektur bør testes med SDK-mock (og har dermed mer til felles med tradisjonelle integrasjonstester).</p>
+<p>Valget av FaaS gjør at integrasjonstestingen foregår kun på forhåndstestet skyinfrastruktur og er dermed av en svært begrenset art. Det bør vurderes om det skal brukes <a href="https://serverspec.org/">Serverspec</a>, <a href="https://github.com/aelsabbahy/goss">Goss</a> eller lignende når vi utvikler infrastruktur (rett og slett fordi det er enkelt å rote til og dette går ut over sikkerheten).</p>
+<p>Ende-til-ende testing skal foregå som automatisk trigget oppgaver laget som FaaS som kjører mot automatisk stage-et testmiljø for å sikre at testene kan kjøres parallelt.</p>
+<h2 id="utviklingsrutiner">Utviklingsrutiner</h2>
+<p>Det skal sørges for:</p>
+<ul>
+<li>Et kontinuerlig dokumentert utviklingsrutine og prosess</li>
+<li>Dokumentasjonen skal omfatte
+<ul>
+<li>Prosessen</li>
+<li>QA-rutinene</li>
+<li>Avvikshåndtering</li>
+<li>...</li>
+</ul></li>
+<li>Utviklingsmiljø som støter tasks som kan kjøres på ulike OS</li>
+<li>Lokal kodestilvalidering, statisk analyse</li>
+<li>Oppdatert arkitekturoversikt</li>
+<li>Oppdatert beslutningslogg</li>
+<li>Oppdatert behandlingsgrunnlag for ikke-funksjonelle krav</li>
+</ul>
+<h3 id="forslag-til-utviklerne">Forslag til utviklerne</h3>
+<ul>
+<li>Automatiserte tester er den viktigste oppgaven</li>
+<li>Gradle som overordnet byggemiljø, annet der nødvendig</li>
+<li><a href="https://nvie.com/posts/a-successful-git-branching-model/">Git flow</a> / <a href="https://hackernoon.com/still-using-gitflow-what-about-a-simpler-alternative-74aa9a46b9a3">Feature branches</a></li>
+<li>&quot;Features&quot; må ikke være for store, ellers får vi mergeproblemer</li>
+<li>Tenk nøye gjennom hva dette vil si for hvordan vi deler opp oppgavene</li>
+<li>CD/CI skjer i AWS CodeStar</li>
+<li>Bruk AWS for det det er verdt for å slippe lokal konfigurasjon</li>
+</ul>
+<h2 id="eksempelarkitektur">Eksempelarkitektur</h2>
+<pre><code>    |----------------|           |----------------------------------|
+    | Ekstern klient |           | Ekstern autentifiseringstjeneste |
+    |----------------|           |----------------------------------|
+
+    |----------------------------------------------------------------------------------------------|
+    |
+    | |----------------------|   |------------------|   |-----------------|   |---------|
+    | | AWS Lambda, GET      |   | AWS Lambda, POST |   | AWS Lambda, PUT |   | AWS IAM |
+    | |----------------------|   |------------------|   |-----------------|   |---------|
+    |
+    | |------------------------|
+    | | AWS Lambda, validation |
+    | |------------------------|
+    |
+    | |-----------------------|   |--------------------------|
+    | | AWS Lambda, update TS |   | AWS Lambda, update index |
+    | |-----------------------|   |--------------------------|
+    |
+    | |----------------|       |-------------|   |------------------|
+    | | AWS JSON store |       | AWS Neptune |   | AWS Search Index |
+    | |----------------|       |-------------|   |------------------|
+    |
+    | 
+    |
+    |
+    |
+    |----------------------------------------------------------------------------------------------|</code></pre>
+<h2 id="lenker">Lenker</h2>
+<p><a href="https://read.acloud.guru/testing-and-the-serverless-approach-495cef7495ea">The serverless approach to testing is different and may actually be easier</a> 
+<br><a href="https://serverless.zone/unit-and-integration-testing-for-lambda-fc9510963003">Unit and Integration Testing for AWS Lambda</a> 
+<br><a href="https://aws.amazon.com/blogs/devops/ui-testing-at-scale-with-aws-lambda/">UI Testing at Scale with AWS Lambda</a></p>
+</body>
+</html>
